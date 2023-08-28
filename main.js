@@ -26,38 +26,40 @@ function createCircle(radius, position, color=0xffffff) {
     scene.add(circle);
 }
 
-function getIntegralCurvatures(n) {
-    return [-n, n + 1, n * (n + 1), n * (n + 1) + 1];
-}
-
 
 const initialCircle = createCircle(radius, { x: 0, y: 0, z: 0 });
 
-// draw three circles where each pair shares a point of tagency of any size
-function drawSequentialCurvatures(n, circle) {
-    if (n <= 0) return;
 
-    const curvatures = getCurvatures(n);
-    const radii = curvatures.map(k => 1 / k);
+function generateBaseCircles() {
+    // Generate three random points in the window
+    const points = [];
+    for (let i = 0; i < 3; i++) {
+        points.push({
+            x: Math.random() * 2 * radius - radius,
+            y: Math.random() * 2 * radius - radius,
+            z: 0
+        });
+    }
 
-    // Draw the three inner circles based on the bounding circle.
-    // For simplicity, we're not calculating the exact positions here.
-    // In a real implementation, you'd compute their positions based on tangency.
+    // Find the Euclidean distance between each pair of points and put this into an array
+    const distances = [];
+    for (let i = 0; i < 3; i++) {
+        const point1 = points[i];
+        for (let j = i + 1; j < 3; j++) {
+            const point2 = points[j];
+            const distance = Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2));
+            distances.push(distance);
+        }
+    }
 
-    const circle1 = createCircle(radii[1], { x: -radii[1], y: 0, z: 0 });
-    const circle2 = createCircle(radii[2], { x: radii[2] / 2, y: radii[2] * Math.sqrt(3) / 2, z: 0 });
-    const circle3 = createCircle(radii[3], { x: radii[2] / 2, y: -radii[2] * Math.sqrt(3) / 2, z: 0 });
+    
 
-    // Recursively draw nested gaskets
-    drawSequentialCurvatures(n - 1, circle1);
-    drawSequentialCurvatures(n - 1, circle2);
-    drawSequentialCurvatures(n - 1, circle3);
+    // Draw three tangent circles with the three points
+    for (let i = 0; i < 3; i++) {
+        const point = points[i];
+        createCircle(radius, point);
+    }
 }
-
-
-
-drawSequentialCurvatures(2, initialCircle);
-
 
 function animate() {
 	requestAnimationFrame( animate );
