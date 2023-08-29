@@ -16,18 +16,36 @@ controls.update();
 const radius = 5;
 const stage = 0; // Number of stages --> 3^(n+1) + 2 = number of spheres in stage n
 
-// draw three circles where each pair shares a point of tagency of any size
-function createCircle(radius, position, color=0xffffff) {
-    const circle = new THREE.Mesh(
-        new THREE.CircleGeometry(radius, 64),
-        new THREE.MeshBasicMaterial({ color: color, wireframe: true })
-    );
+function radiusToColor(radius) {
+    
+    const maxRadius = 5; 
+    const minRadius = 0;
+
+    const ratio = (radius - minRadius) / (maxRadius - minRadius);
+    
+    const red = Math.floor(255 * ratio);
+    const blue = Math.floor(255 * (1 - ratio));
+
+    return new THREE.Color(`rgb(${red}, 0, ${blue})`);
+}
+
+function createCircle(radius, position) {
+    const color = radiusToColor(radius);
+    const circleGeometry = new THREE.CircleGeometry(radius, 32);
+
+    const circleMaterial = new THREE.LineBasicMaterial({ color: color });
+
+    const circle = new THREE.LineLoop(circleGeometry, circleMaterial);
     circle.position.set(position.x, position.y, position.z);
     scene.add(circle);
 }
 
 
-function solveCircles(x1, y1, r1, x2, y2, r2, x3, y3, r3, r4) {
+// based on three circles, output the centroid of a fourth circle tangent to the first three
+function generateNewCircle(x1, y1, r1, x2, y2, r2, x3, y3, r3) {
+    // Find the radius of the fourth circle
+    const r4 = 1/(1/r1 + 1/r2 + 1/r3 + 2*Math.sqrt(1/r1*1/r2 + 1/r2*1/r3 + 1/r3*1/r1));
+
     // Calculate the coefficients of the equations
     const A1 = 2 * (x2 - x1);
     const B1 = 2 * (y2 - y1);
@@ -48,7 +66,13 @@ function solveCircles(x1, y1, r1, x2, y2, r2, x3, y3, r3, r4) {
     const b = (A1 * C2 - A2 * C1) / det;
 
     // return a point specificed where a is the x coord and b is the y coord
-    return {x: a, y: b, z: 0};
+    let new_centroid = {x: a, y: b, z: 0};
+
+    // draw the new circle
+    createCircle(r4, new_centroid);
+
+    // return the new circle
+    return {x: a, y:b, radius: r4};
 }
 
 function generateBaseCircles() {
@@ -82,23 +106,30 @@ function generateBaseCircles() {
     createCircle(radius2, points[1]);
     createCircle(radius3, points[2]);
 
-
-    // Find two circles tangent to the first three using Descartes' Theorem
-    let radius4 = 1/(1/radius1 + 1/radius2 + 1/radius3 + 2*Math.sqrt(1/radius1*1/radius2 + 1/radius2*1/radius3 + 1/radius3*1/radius1));
-    let radius5 = 1/(1/radius1 + 1/radius2 + 1/radius3 - 2*Math.sqrt(1/radius1*1/radius2 + 1/radius2*1/radius3 + 1/radius3*1/radius1));
-
-    console.log(radius4);
-    let centroid4 = solveCircles(points[0].x, points[0].y, radius1, points[1].x, points[1].y, radius2, points[2].x, points[2].y, radius3, radius4); 
-    createCircle(radius4, centroid4);
-
-    console.log(radius5);
-    let centroid5 = solveCircles(points[0].x, points[0].y, radius1, points[1].x, points[1].y, radius2, points[2].x, points[2].y, radius3, radius5);
-    createCircle(radius5, centroid5);
+    return {circle1: {x: points[0].x, y: points[0].y, radius: radius1}, circle2: {x: points[1].x, y: points[1].y, radius: radius2}, circle3: {x: points[2].x, y: points[2].y, radius: radius3}};
 
 }
 
-generateBaseCircles();
 
+function recursiveGeneration(base_circle1, base_circle2, base_circle3, stage) {
+    // generate new circles based on the previous three, make sure all permutations of three circles are covered
+    if (stage === 0) {
+        return;
+    }
+    else {
+        console.log(base_circle1, base_circle2, base_circle3)
+        console.log("-----")
+        console.log(base_circle1.x, base_circle1.y)
+        let new_circle = generateNewCircle(base_circle1.x, base_circle1.y, base_circle1.radius, base_circle2.x, base_circle2.y, base_circle2.radius, base_circle3.x, base_circle3.y, base_circle3.radius);
+        console.log(new_circle);
+        recursiveGeneration(base_circle1, base_circle2, new_circle, stage - 1);
+        recursiveGeneration(base_circle1, new_circle, base_circle3, stage - 1);
+        recursiveGeneration(new_circle, base_circle2, base_circle3, stage - 1);
+    }
+}
+
+let { circle1: base_circle1, circle2: base_circle2, circle3: base_circle3 } = generateBaseCircles();
+recursiveGeneration(base_circle1, base_circle2, base_circle3, 3);
 
 function animate() {
 	requestAnimationFrame( animate );
