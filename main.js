@@ -29,20 +29,46 @@ function radiusToColor(radius) {
     return new THREE.Color(`rgb(${red}, 0, ${blue})`);
 }
 
+// // MESH CIRCLE
+// function createCircle(radius, position) {
+//     const color = radiusToColor(radius);
+//     const circleGeometry = new THREE.CircleGeometry(radius, 32);
+
+//     const circleMaterial = new THREE.LineBasicMaterial({ color: color });
+
+//     const circle = new THREE.LineLoop(circleGeometry, circleMaterial);
+//     circle.position.set(position.x, position.y, position.z);
+//     scene.add(circle);
+// }
+
 function createCircle(radius, position) {
     const color = radiusToColor(radius);
-    const circleGeometry = new THREE.CircleGeometry(radius, 32);
+
+    // Generate perimeter points of the circle
+    const segments = 64;
+    const vertices = [];
+    for (let i = 0; i < segments; i++) {
+        const theta = (i / segments) * Math.PI * 2;
+        const x = radius * Math.cos(theta);
+        const y = radius * Math.sin(theta);
+        vertices.push(x, y, 0);  // Assuming circle is in X-Y plane
+    }
+
+    // Create BufferGeometry from perimeter points
+    const bufferCircleGeometry = new THREE.BufferGeometry();
+    bufferCircleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 
     const circleMaterial = new THREE.LineBasicMaterial({ color: color });
 
-    const circle = new THREE.LineLoop(circleGeometry, circleMaterial);
+    const circle = new THREE.LineLoop(bufferCircleGeometry, circleMaterial);
     circle.position.set(position.x, position.y, position.z);
     scene.add(circle);
 }
 
 
+
 // based on three circles, output the centroid of a fourth circle tangent to the first three
-function generateNewCircle(x1, y1, r1, x2, y2, r2, x3, y3, r3) {
+function generateNewCircle1(x1, y1, r1, x2, y2, r2, x3, y3, r3) {
     // Find the radius of the fourth circle
     const r4 = 1/(1/r1 + 1/r2 + 1/r3 + 2*Math.sqrt(1/r1*1/r2 + 1/r2*1/r3 + 1/r3*1/r1));
 
@@ -62,6 +88,41 @@ function generateNewCircle(x1, y1, r1, x2, y2, r2, x3, y3, r3) {
         throw new Error("No unique solution exists.");
     }
     
+    const a = (C1 * B2 - C2 * B1) / det;
+    const b = (A1 * C2 - A2 * C1) / det;
+
+    // return a point specificed where a is the x coord and b is the y coord
+    let new_centroid = {x: a, y: b, z: 0};
+
+    // draw the new circle
+    createCircle(r4, new_centroid);
+
+    // return the new circle
+    return {x: a, y:b, radius: r4};
+}
+
+// based on three circles, output the centroid of a fourth circle tangent to the first three
+function generateNewCircle2(x1, y1, r1, x2, y2, r2, x3, y3, r3) {
+    // Find the radius of the fourth circle
+    const r4 = 1/(1/r1 + 1/r2 + 1/r3 - 2*Math.sqrt(1/r1*1/r2 + 1/r2*1/r3 + 1/r3*1/r1));
+
+    // Calculate the coefficients of the equations
+    const A1 = 2 * (x2 - x1);
+    const B1 = 2 * (y2 - y1);
+    const C1 = x2*x2 - x1*x1 + y2*y2 - y1*y1 + (r1 + r4)*(r1 + r4) - (r2 + r4)*(r2 + r4);
+
+    const A2 = 2 * (x3 - x1);
+    const B2 = 2 * (y3 - y1);
+    const C2 = x3*x3 - x1*x1 + y3*y3 - y1*y1 + (r1 + r4)*(r1 + r4) - (r3 + r4)*(r3 + r4);
+
+    // Use the elimination method to solve for a and b
+    const det = A1*B2 - A2*B1;
+
+    if (det === 0) {
+        throw new Error("No unique solution exists.");
+
+    }
+
     const a = (C1 * B2 - C2 * B1) / det;
     const b = (A1 * C2 - A2 * C1) / det;
 
@@ -120,16 +181,22 @@ function recursiveGeneration(base_circle1, base_circle2, base_circle3, stage) {
         console.log(base_circle1, base_circle2, base_circle3)
         console.log("-----")
         console.log(base_circle1.x, base_circle1.y)
-        let new_circle = generateNewCircle(base_circle1.x, base_circle1.y, base_circle1.radius, base_circle2.x, base_circle2.y, base_circle2.radius, base_circle3.x, base_circle3.y, base_circle3.radius);
-        console.log(new_circle);
-        recursiveGeneration(base_circle1, base_circle2, new_circle, stage - 1);
-        recursiveGeneration(base_circle1, new_circle, base_circle3, stage - 1);
-        recursiveGeneration(new_circle, base_circle2, base_circle3, stage - 1);
+        let new_circle1 = generateNewCircle1(base_circle1.x, base_circle1.y, base_circle1.radius, base_circle2.x, base_circle2.y, base_circle2.radius, base_circle3.x, base_circle3.y, base_circle3.radius);
+        console.log(new_circle1);
+        recursiveGeneration(base_circle1, base_circle2, new_circle1, stage - 1);
+        recursiveGeneration(base_circle1, new_circle1, base_circle3, stage - 1);
+        recursiveGeneration(new_circle1, base_circle2, base_circle3, stage - 1);
+        
+        let new_circle2 = generateNewCircle2(base_circle1.x, base_circle1.y, base_circle1.radius, base_circle2.x, base_circle2.y, base_circle2.radius, base_circle3.x, base_circle3.y, base_circle3.radius);
+        console.log(new_circle2);
+        recursiveGeneration(base_circle1, base_circle2, new_circle2, stage - 1);
+        recursiveGeneration(base_circle1, new_circle2, base_circle3, stage - 1);
+        recursiveGeneration(new_circle2, base_circle2, base_circle3, stage - 1);
     }
 }
 
 let { circle1: base_circle1, circle2: base_circle2, circle3: base_circle3 } = generateBaseCircles();
-recursiveGeneration(base_circle1, base_circle2, base_circle3, 3);
+recursiveGeneration(base_circle1, base_circle2, base_circle3, 4);
 
 function animate() {
 	requestAnimationFrame( animate );
