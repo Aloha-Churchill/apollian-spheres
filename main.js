@@ -29,6 +29,19 @@ function radiusToColor(radius) {
     return new THREE.Color(`rgb(${red}, 0, ${blue})`);
 }
 
+// generate a color based on the current stage
+function stageToColor(stage) {
+    const maxStage = 5;
+    const minStage = 0;
+
+    const ratio = (stage - minStage) / (maxStage - minStage);
+
+    const red = Math.floor(255 * ratio);
+    const blue = Math.floor(255 * (1 - ratio));
+
+    return new THREE.Color(`rgb(${red}, 0, ${blue})`);
+}
+
 // // MESH CIRCLE
 // function createCircle(radius, position) {
 //     const color = radiusToColor(radius);
@@ -192,11 +205,15 @@ function recursiveGeneration(base_circle1, base_circle2, base_circle3, stage) {
         recursiveGeneration(base_circle1, base_circle2, new_circle2, stage - 1);
         recursiveGeneration(base_circle1, new_circle2, base_circle3, stage - 1);
         recursiveGeneration(new_circle2, base_circle2, base_circle3, stage - 1);
+
+        // recursiveGeneration(new_circle1, new_circle2, base_circle3, stage - 1);
+        // recursiveGeneration(new_circle1, base_circle2, new_circle2, stage - 1);
+        // recursiveGeneration(base_circle1, new_circle1, new_circle2, stage - 1);
     }
 }
 
 let { circle1: base_circle1, circle2: base_circle2, circle3: base_circle3 } = generateBaseCircles();
-recursiveGeneration(base_circle1, base_circle2, base_circle3, 4);
+recursiveGeneration(base_circle1, base_circle2, base_circle3, 1);
 
 function animate() {
 	requestAnimationFrame( animate );
