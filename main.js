@@ -191,20 +191,36 @@ function recursiveGeneration(base_circle1, base_circle2, base_circle3, stage) {
         return;
     }
     else {
-        console.log(base_circle1, base_circle2, base_circle3)
-        console.log("-----")
-        console.log(base_circle1.x, base_circle1.y)
+        // generate two new circles
         let new_circle1 = generateNewCircle1(base_circle1.x, base_circle1.y, base_circle1.radius, base_circle2.x, base_circle2.y, base_circle2.radius, base_circle3.x, base_circle3.y, base_circle3.radius);
-        console.log(new_circle1);
+        let new_circle2 = generateNewCircle2(base_circle1.x, base_circle1.y, base_circle1.radius, base_circle2.x, base_circle2.y, base_circle2.radius, base_circle3.x, base_circle3.y, base_circle3.radius);
+        
+        // call recursiveGeneration on each triple of tangent circles
         recursiveGeneration(base_circle1, base_circle2, new_circle1, stage - 1);
         recursiveGeneration(base_circle1, new_circle1, base_circle3, stage - 1);
         recursiveGeneration(new_circle1, base_circle2, base_circle3, stage - 1);
-        
-        let new_circle2 = generateNewCircle2(base_circle1.x, base_circle1.y, base_circle1.radius, base_circle2.x, base_circle2.y, base_circle2.radius, base_circle3.x, base_circle3.y, base_circle3.radius);
-        console.log(new_circle2);
+
         recursiveGeneration(base_circle1, base_circle2, new_circle2, stage - 1);
         recursiveGeneration(base_circle1, new_circle2, base_circle3, stage - 1);
         recursiveGeneration(new_circle2, base_circle2, base_circle3, stage - 1);
+
+
+
+
+        // console.log(base_circle1, base_circle2, base_circle3)
+        // console.log("-----")
+        // console.log(base_circle1.x, base_circle1.y)
+        // let new_circle1 = generateNewCircle1(base_circle1.x, base_circle1.y, base_circle1.radius, base_circle2.x, base_circle2.y, base_circle2.radius, base_circle3.x, base_circle3.y, base_circle3.radius);
+        // console.log(new_circle1);
+        // recursiveGeneration(base_circle1, base_circle2, new_circle1, stage - 1);
+        // recursiveGeneration(base_circle1, new_circle1, base_circle3, stage - 1);
+        // recursiveGeneration(new_circle1, base_circle2, base_circle3, stage - 1);
+        
+        // let new_circle2 = generateNewCircle2(base_circle1.x, base_circle1.y, base_circle1.radius, base_circle2.x, base_circle2.y, base_circle2.radius, base_circle3.x, base_circle3.y, base_circle3.radius);
+        // console.log(new_circle2);
+        // recursiveGeneration(base_circle1, base_circle2, new_circle2, stage - 1);
+        // recursiveGeneration(base_circle1, new_circle2, base_circle3, stage - 1);
+        // recursiveGeneration(new_circle2, base_circle2, base_circle3, stage - 1);
 
         // recursiveGeneration(new_circle1, new_circle2, base_circle3, stage - 1);
         // recursiveGeneration(new_circle1, base_circle2, new_circle2, stage - 1);
@@ -213,7 +229,7 @@ function recursiveGeneration(base_circle1, base_circle2, base_circle3, stage) {
 }
 
 let { circle1: base_circle1, circle2: base_circle2, circle3: base_circle3 } = generateBaseCircles();
-recursiveGeneration(base_circle1, base_circle2, base_circle3, 1);
+recursiveGeneration(base_circle1, base_circle2, base_circle3, 2);
 
 function animate() {
 	requestAnimationFrame( animate );
