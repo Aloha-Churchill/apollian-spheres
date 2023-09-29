@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { SVGRenderer } from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/renderers/SVGRenderer.js";
+
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -14,7 +16,7 @@ controls.update();
 
 // User parameters
 const radius = 5;
-const stage = 6; // Number of stages --> 3^(n+1) + 2 = number of spheres in stage n
+const stage = 3; // Number of stages --> 3^(n+1) + 2 = number of spheres in stage n
 const MAX_STAGE = 3;
 const dimension = "2D"; // 2D or 3D
 
@@ -50,14 +52,6 @@ function stageToColor(stage) {
     else if (stage === 3) {
         return new THREE.Color(`rgb(0, 255, 0)`);
     }
-    // if stage is 4, return purple
-    else if (stage === 4) {
-        return new THREE.Color(`rgb(255, 0, 255)`);
-    }
-    // if stage is 5, return orange
-    else if (stage === 5) {
-        return new THREE.Color(`rgb(255, 165, 0)`);
-    }
 }
 
 // // generate a color based on the current stage
@@ -89,11 +83,11 @@ function stageToColor(stage) {
 // }
 
 function createCircle(radius, position, stage) {
-    const color = radiusToColor(radius);
-    //const color = stageToColor(stage);
+    // const color = radiusToColor(radius);
+    const color = stageToColor(stage);
 
     // Generate perimeter points of the circle
-    const segments = 64;
+    const segments = 128;
     const vertices = [];
     for (let i = 0; i < segments; i++) {
         const theta = (i / segments) * Math.PI * 2;
@@ -105,10 +99,11 @@ function createCircle(radius, position, stage) {
     // Create BufferGeometry from perimeter points
     const bufferCircleGeometry = new THREE.BufferGeometry();
     bufferCircleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-
+    
     const circleMaterial = new THREE.LineBasicMaterial({ color: color });
-
     const circle = new THREE.LineLoop(bufferCircleGeometry, circleMaterial);
+    
+    
     circle.position.set(position.x, position.y, position.z);
     scene.add(circle);
 }
@@ -242,8 +237,6 @@ function generateBaseSpheres() {
     return {sphere1: {x: c1[0], y: c1[1], z: c1[2]}, sphere2: {x: c2[0], y: c2[1], z: c2[2]}, sphere3: {x: c3[0], y: c3[1], z: c3[2]}, sphere4: {x: c4[0], y: c4[1], z: c4[2]}};
 }
 
-
-
 function recursiveGeneration(base_circle1, base_circle2, base_circle3, curr_stage) {
     // generate new circles based on the previous three, make sure all permutations of three circles are covered
     if (curr_stage === 0) {
@@ -283,7 +276,9 @@ recursiveGeneration(base_circle2, base_circle3, outerCircle, stage);
 function animate() {
 	requestAnimationFrame( animate );
     controls.update();
-	renderer.render( scene, camera );
+	console.log(camera, camera instanceof THREE.Camera);
+    renderer.render(scene, camera);
+
 }
 
-animate();
+animate()
